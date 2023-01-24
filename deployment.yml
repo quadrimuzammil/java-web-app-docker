@@ -1,18 +1,71 @@
-apiVersion: extensions/v1beta1
+apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: javawebapp-ENVIRONMENT-BUILD_NUMBER
+  name: javawebappdeployment
 spec:
-  replicas: 1
+  replicas: 2
+  strategy: 
+    type: Recreate
+  selector: 
+    matchLabels:
+      app: javawebapp
   template:
-    metadata:
+    metadata: 
+      name: javawebapppod
       labels:
         app: javawebapp
-        version: "BUILD_NUMBER"
     spec:
       containers:
-      - name: javawebapp-ENVIRONMENT-BUILD_NUMBER
-        image: IMAGE
-        imagePullPolicy: IfNotPresent
+      - name: javawebappcontainer
+        image: gcr.io/devops-374009/java-webapp:34
         ports:
         - containerPort: 8080
+        resources:
+          requests:
+            cpu: 200m
+            memory: 256Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        readinessProbe:
+          httpGet:
+            path: /java-web-app
+            port: 8080
+          initialDelaySeconds: 5
+          timeoutSeconds: 1
+          periodSeconds: 15
+        livenessProbe:
+          httpGet:
+            path: /java-web-app
+            port: 8080
+          initialDelaySeconds: 15
+          timeoutSeconds: 1
+          periodSeconds: 15 
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: javawebappsvc
+spec:
+  type: LoadBalancer
+  selector:
+    app: javawebapp
+  ports:
+  - port: 80
+    targetPort: 8080
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: hostpathpv
+spec:
+  storageClassName: manual
+  capacity: 
+    storage: 1Gi
+  accessModes:
+  - ReadWriteOnce
+  hostPath:
+    path: "/kube/mongo"
+    
+      
