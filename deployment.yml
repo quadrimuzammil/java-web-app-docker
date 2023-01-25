@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
       - name: javawebappcontainer
-        image: gcr.io/devops-374009/java-webapp:34
+        image: gcr.io/devops-374009/java-webapp
         ports:
         - containerPort: 8080
         resources:
